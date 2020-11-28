@@ -1,10 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const pool = require('./db')
 const cors = require('cors')
 const morgan = require('morgan')
 const dotenv = require('dotenv')
 dotenv.config()
+const userRoutes = require('./routes/user')
+const transactionRoutes = require('./routes/transaction')
+
 const app = express()
 const port = process.env.PORT || 4000
 
@@ -16,30 +18,11 @@ app.use(cors())
 
 // -----Route Handlers-----
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Welcome to My Finance Tracker!')
 })
 
-app.get('/users', async (req, res) => {
-  try {
-    const allUsers = await pool.query('SELECT * FROM Users')
-    res.status(200).json(allUsers.rows)
-  } catch (err) {
-    res.status(400).json({ errMsg: err })
-  }
-})
-
-app.post('/user', async (req, res) => {
-  try {
-    const { first_name, last_name, email, profile_image } = req.body
-    const newUser = await pool.query(
-      'INSERT INTO Users (first_name, last_name, email, profile_image) VALUES ($1, $2, $3, $4) RETURNING *;',
-      [first_name, last_name, email, profile_image],
-    )
-    res.status(200).json(newUser.rows)
-  } catch (err) {
-    res.status(400).json({ errMsg: err })
-  }
-})
+app.use('/api', userRoutes)
+app.use('/api', transactionRoutes)
 
 // -----Server Handlers-----
 app.listen(port, () => {
